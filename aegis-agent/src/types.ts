@@ -1,0 +1,2 @@
+export interface Env { AI: Ai; DB: D1Database; KV: KVNamespace; CONTENT_QUEUE: Queue; ASSETS: Fetcher; GROQ_API_KEY?: string; GEMINI_API_KEY?: string; PAYSTACK_SECRET_KEY?: string; GITHUB_TOKEN?: string; GITHUB_REPOSITORY?: string; PIPEDREAM_WEBHOOK_URL?: string; [key: string]: unknown }
+export interface ScriptResult { title:string; hook:string; body:string; cta:string; full_script:string; affiliate_keywords:string[]; scene_descriptions:string[]; target_platforms:string[]; show_slug:string }

@@ -1,0 +1,44 @@
+name = "jabulanifm"
+main = "aegis-agent/src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = "./frontend/dist"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/webhook/*", "/tts/*"]
+
+[vars]
+AGENT_NAME = "JabulaniFM Content OS"
+DEPLOY_DOMAIN = "content.jabulanifm.com"
+NETWORK_NAME = "JabulaniFM"
+PRIMARY_LANGUAGE = "en-ZA"
+SECONDARY_LANGUAGE = "af-ZA"
+MAX_DAILY_SCRIPTS = "3"
+MAX_DAILY_IMAGES = "8"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aegis_db"
+database_id = "b73928dd-e592-4402-9ca3-6e026a78e4f7"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "5b2fe5304b364c5eb986cdf1b4bdb996"
+
+[[queues.producers]]
+queue = "jabulanifm-content-queue"
+binding = "CONTENT_QUEUE"
+
+[[queues.consumers]]
+queue = "jabulanifm-content-queue"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+
+[ai]
+binding = "AI"
+
+[triggers]
+crons = ["0 3 * * *", "0 6 * * *", "0 12 * * 1"]

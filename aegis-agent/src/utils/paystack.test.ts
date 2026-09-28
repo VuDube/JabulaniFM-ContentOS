@@ -1,0 +1,1 @@
+import {describe,it,expect} from 'vitest'; import {verifyPaystackSignature} from './paystack'; describe('Paystack signatures',()=>{it('rejects missing and malformed signatures',async()=>{expect(await verifyPaystackSignature('{}','','secret')).toBe(false);expect(await verifyPaystackSignature('{}','00','secret')).toBe(false);});});

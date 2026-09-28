@@ -1,0 +1,1 @@
+{"name":"jabulanifm-content-os","private":true,"scripts":{"build":"npm --prefix frontend install && npm --prefix frontend run build && npx tsc --noEmit -p aegis-agent/tsconfig.json","test":"npm --prefix aegis-agent test","format:check":"npx prettier --check ."},"devDependencies":{"@types/node":"^26.6.3","prettier":"^3.3.3","typescript":"^5.7.2","wrangler":"^4.30.0"}}

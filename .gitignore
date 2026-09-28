@@ -1,0 +1,7 @@
+node_modules/
+frontend/dist/
+.aegis/
+.env
+*.log
+__pycache__/
+frontend/.astro/
