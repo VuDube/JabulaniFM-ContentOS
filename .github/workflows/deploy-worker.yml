@@ -15,7 +15,7 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install and validate
-        run: npm ci && npm --prefix frontend ci && npm run build && npm --prefix aegis-agent test
+        run: npm ci && npm --prefix frontend ci && npm --prefix aegis-agent ci && npm run build && npm --prefix aegis-agent test
       - name: Verify deployment credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
