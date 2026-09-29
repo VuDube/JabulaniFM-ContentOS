@@ -1,0 +1,2 @@
+import type { Env } from '../types';
+export async function executeStandingOrders(env: Env) { const goals = await env.DB.prepare("SELECT id,standing_order FROM autonomous_goals WHERE status='active' AND standing_order IS NOT NULL").all<{id:number;standing_order:string}>(); for (const goal of goals.results) await env.DB.prepare('UPDATE autonomous_goals SET last_run=CURRENT_TIMESTAMP WHERE id=?').bind(goal.id).run(); return goals.results.length; }

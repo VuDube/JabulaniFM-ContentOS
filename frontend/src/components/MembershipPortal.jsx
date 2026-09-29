@@ -1,0 +1,1 @@
+export default function MembershipPortal() { return <section className="membership"><span className="eyebrow">JABULANIFM INSIDER</span><h2>More context.<br/><em>Closer to the signal.</em></h2><p>Insider gives you source notes, member-only briefings and the tools behind the shows.</p><a className="button" href="/store">Browse membership tools</a></section>; }

@@ -1,9 +1,9 @@
 import type { Env, ScriptResult } from '../types';
 import { routeAI } from '../providers/router';
 
-export async function generateScript(env: Env, showSlug: string, topic: string): Promise<ScriptResult> {
+export async function generateScript(env: Env, showSlug: string, topic: string): Promise<ScriptResult & { job_id: number }> {
   const show = await env.DB
-    .prepare('SELECT show_name,tone,target_demographic FROM shows WHERE show_slug=?')
+    .prepare("SELECT show_name,tone,target_demographic,primary_platforms FROM shows WHERE show_slug=? AND status='active'")
     .bind(showSlug)
     .first<{ show_name: string; tone: string; target_demographic: string }>();
   if (!show) throw new Error(`Unknown show: ${showSlug}`);
@@ -16,10 +16,11 @@ export async function generateScript(env: Env, showSlug: string, topic: string):
     throw new Error('AI output failed editorial schema validation');
   }
   parsed.show_slug = showSlug;
-  await env.DB
+  const saved = await env.DB
     .prepare("INSERT INTO content_jobs(show_slug,topic,script,status) VALUES(?,?,?,'script_ready')")
     .bind(showSlug, topic, JSON.stringify(parsed))
     .run();
-  await env.CONTENT_QUEUE.send({ type: 'render_request', show_slug: showSlug, topic, script: parsed });
-  return parsed;
+  const jobId = Number(saved.meta.last_row_id);
+  await env.CONTENT_QUEUE.send({ type: 'render_request', job_id: jobId, show_slug: showSlug, topic, script: parsed });
+  return { ...parsed, job_id: jobId };
 }

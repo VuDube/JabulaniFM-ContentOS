@@ -1,0 +1,1 @@
+export default function ShowShelfGrid({shows=[]}) { return <div className="show-grid">{shows.map((show,index)=><a className="show-card" href={`/shows/${show.slug}`} key={show.slug}><span className="show-index">{String(index+1).padStart(2,'0')}</span><h3>{show.name}</h3><p>{show.tagline}</p><span className="card-arrow">↗</span></a>)}</div>; }

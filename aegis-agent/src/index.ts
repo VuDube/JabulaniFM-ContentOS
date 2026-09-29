@@ -3,26 +3,45 @@ import { handleApiRequest } from './routes/api';
 import { handleTTSRequest } from './routes/tts';
 import { handlePaystackWebhook } from './routes/paystack';
 import { runDreamingCycle } from './dreaming/cycle';
+import { runContentPipeline } from './content/pipeline';
+import { runWeeklyStrategy } from './goals/autonomous';
+import { handleMcpRequest } from './mcp/server';
 
-const fallbackSite = `<!doctype html><html lang="en-ZA"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>JabulaniFM</title><style>body{margin:0;background:#0a0b0e;color:#f9fafb;font:16px system-ui;padding:12vw 8vw}main{max-width:850px}small{color:#f59e0b;letter-spacing:.15em}h1{font-size:clamp(3rem,9vw,8rem);line-height:.9;letter-spacing:-.07em}em{color:#f59e0b;font-style:normal}p{color:#9ca3af;line-height:1.6}.button{display:inline-block;background:#f59e0b;color:#0a0b0e;padding:14px 20px;font-weight:700}</style><main><small>JABULANIFM / CONTENT OS</small><h1>South African ideas,<br><em>broadcast differently.</em></h1><p>Ten specialist shows covering money, work, culture, history and health — made for the way Mzansi actually lives.</p><a class="button" href="/api/shows">Explore the network API</a></main>`;
+function corsHeaders(): HeadersInit {
+  return { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-paystack-signature' };
+}
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
-    if (request.method === 'OPTIONS') return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type,x-paystack-signature' } });
-    if (url.pathname.startsWith('/api/')) return handleApiRequest(request, env);
-    if (url.pathname.startsWith('/tts/')) return handleTTSRequest(request, env);
-    if (url.pathname === '/webhook/paystack') return handlePaystackWebhook(request, env);
-    if (env.ASSETS) return env.ASSETS.fetch(request);
-    return new Response(fallbackSite, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' } });
+    if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+    let response: Response;
+    if (url.pathname.startsWith('/api/')) response = await handleApiRequest(request, env);
+    else if (url.pathname.startsWith('/tts/')) response = await handleTTSRequest(request, env);
+    else if (url.pathname === '/webhook/paystack') response = await handlePaystackWebhook(request, env);
+    else if (url.pathname === '/mcp' || url.pathname.startsWith('/mcp/')) response = await handleMcpRequest(request, env);
+    else response = await env.ASSETS.fetch(request);
+    const headers = new Headers(response.headers);
+    for (const [key, value] of Object.entries(corsHeaders())) headers.set(key, value);
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   },
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(event.cron === '0 6 * * *' ? runDreamingCycle(env) : event.cron === '0 3 * * *' ? env.CONTENT_QUEUE.send({ type: 'daily_generation' }) : Promise.resolve());
+    ctx.waitUntil((async () => {
+      if (event.cron === '0 3 * * *') await runContentPipeline(env);
+      else if (event.cron === '0 6 * * *') await runDreamingCycle(env);
+      else if (event.cron === '0 12 * * 1') await runWeeklyStrategy(env);
+    })());
   },
   async queue(batch: MessageBatch<unknown>, env: Env) {
     for (const message of batch.messages) {
-      if (message.body && typeof message.body === 'object' && 'show_slug' in message.body) await env.DB.prepare("UPDATE content_jobs SET status='script_ready' WHERE show_slug=? AND status='script_ready'").bind((message.body as { show_slug: string }).show_slug).run();
-      message.ack();
+      try {
+        const body = message.body as { type?: string; job_id?: number; show_slug?: string };
+        if (body.type === 'render_request' && body.job_id) await env.DB.prepare("UPDATE content_jobs SET status='script_ready' WHERE id=?").bind(body.job_id).run();
+        message.ack();
+      } catch (error) {
+        await env.DB.prepare("UPDATE daily_stats SET errors=errors+1, updated_at=CURRENT_TIMESTAMP WHERE date=?").bind(new Date().toISOString().slice(0, 10)).run().catch(() => undefined);
+        message.retry();
+      }
     }
   }
 };

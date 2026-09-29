@@ -1,1 +1,1 @@
-import {defineConfig} from 'astro/config'; import cloudflare from '@astrojs/cloudflare'; import react from '@astrojs/react'; export default defineConfig({output:'static',adapter:cloudflare(),integrations:[react()],site:'https://jabulanifm.com'});
+import { defineConfig } from 'astro/config'; import cloudflare from '@astrojs/cloudflare'; import react from '@astrojs/react'; import tailwind from '@astrojs/tailwind'; export default defineConfig({ output:'static', adapter:cloudflare(), integrations:[react(),tailwind()], site:'https://jabulanifm.com' });

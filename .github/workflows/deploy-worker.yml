@@ -1,12 +1,28 @@
 name: Deploy JabulaniFM Worker
-on: {push: {branches: [main]}, workflow_dispatch: {}}
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: {node-version: 22}
-      - run: npm install && npm --prefix frontend install && npm --prefix frontend run build
-      - run: npx wrangler deploy
-        env: {CLOUDFLARE_API_TOKEN: '${{ secrets.CLOUDFLARE_API_TOKEN }}', CLOUDFLARE_ACCOUNT_ID: '${{ secrets.CLOUDFLARE_ACCOUNT_ID }}'}
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install and validate
+        run: npm ci && npm --prefix frontend ci && npm run build && npm --prefix aegis-agent test
+      - name: Verify deployment credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+      - name: Deploy single Worker with static assets
+        run: npx wrangler deploy --config wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

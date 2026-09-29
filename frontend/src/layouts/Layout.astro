@@ -1,2 +1,6 @@
---- const {title='JabulaniFM Content OS',description='South African stories, strategies and practical intelligence.'}=Astro.props; ---
-<!doctype html><html lang="en-ZA"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content={description}/><title>{title}</title></head><body><slot/></body></html>
+---
+import Header from '../components/Header.astro'; import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+const {title='JabulaniFM — South African ideas, broadcast differently.',description='South African stories, strategies and practical intelligence.'}=Astro.props;
+---
+<!doctype html><html lang="en-ZA"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content={description}/><meta name="theme-color" content="#0A0B0E"/><title>{title}</title></head><body><Header/><slot/><Footer/></body></html>

@@ -1,0 +1,1 @@
+export default function VideoPlayerModal({title='JabulaniFM Watch'}) { return <div className="video-shell" role="region" aria-label={title}><div className="video-placeholder"><span className="play">▶</span><strong>{title}</strong><small>Video signal ready</small></div></div>; }

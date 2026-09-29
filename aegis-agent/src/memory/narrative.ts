@@ -1,0 +1,3 @@
+import type { Env } from '../types';
+export async function addNarrative(env: Env, item: { show_slug?: string; chapter: string; summary: string; key_events?: string; emotional_tone?: string }) { const r = await env.DB.prepare('INSERT INTO narrative_memory(show_slug,chapter,summary,key_events,emotional_tone) VALUES(?,?,?,?,?)').bind(item.show_slug ?? null,item.chapter,item.summary,item.key_events ?? null,item.emotional_tone ?? null).run(); return { id: r.meta.last_row_id, ...item }; }
+export async function listNarrative(env: Env, showSlug?: string) { return (await env.DB.prepare('SELECT * FROM narrative_memory WHERE show_slug=? ORDER BY created_at DESC LIMIT 50').bind(showSlug ?? null).all()).results; }

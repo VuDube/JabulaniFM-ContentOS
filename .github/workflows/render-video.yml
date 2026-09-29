@@ -4,22 +4,29 @@ on:
     inputs:
       show_slug: {required: true, default: money-desk}
       topic: {required: true, default: South African finance briefing}
-  schedule: [{cron: '0 4 * * *'}]
+  schedule:
+    - cron: '0 4 * * *'
+permissions:
+  contents: read
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - run: pip install edge-tts pillow requests
-      - env: {SHOW: '${{ github.event.inputs.show_slug || 'money-desk' }}', TOPIC: '${{ github.event.inputs.topic || 'South African finance briefing' }}'}
+      - name: Install render dependencies
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-dejavu && pip install edge-tts pillow requests
+      - name: Generate script
+        env: {SHOW: '${{ github.event.inputs.show_slug || 'money-desk' }}', TOPIC: '${{ github.event.inputs.topic || 'South African finance briefing' }}'}
         run: python github-actions/scripts/generate_script.py --show "$SHOW" --topic "$TOPIC" --output script.json
-      - run: python github-actions/scripts/generate_tts.py --script script.json --output voiceover.mp3
-      - run: python github-actions/scripts/generate_images.py --script script.json --output-dir images
+      - name: Synthesize voiceover
+        run: python github-actions/scripts/generate_tts.py --script script.json --output voiceover.mp3 --voice en-ZA-LeahNeural
+      - name: Generate scene images
         env: {CLOUDFLARE_ACCOUNT_ID: '${{ secrets.CLOUDFLARE_ACCOUNT_ID }}', CLOUDFLARE_API_TOKEN: '${{ secrets.CLOUDFLARE_API_TOKEN }}'}
-      - run: python github-actions/scripts/assemble_video.py --audio voiceover.mp3 --images images --output jabulanifm-video.mp4
+        run: python github-actions/scripts/generate_images.py --script script.json --output-dir images
+      - name: Assemble video
+        run: python github-actions/scripts/assemble_video.py --audio voiceover.mp3 --images images --output jabulanifm-video.mp4 --resolution 1080x1920
       - uses: actions/upload-artifact@v4
         with: {name: jabulanifm-video-${{ github.run_id }}, path: jabulanifm-video.mp4, retention-days: 7}

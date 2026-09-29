@@ -2,12 +2,20 @@ name = "jabulanifm"
 main = "aegis-agent/src/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
-workers_dev = true
+workers_dev = false
 
 [assets]
 directory = "./frontend/dist"
 not_found_handling = "single-page-application"
 run_worker_first = ["/api/*", "/webhook/*", "/tts/*"]
+
+[[routes]]
+pattern = "jabulanifm.com"
+custom_domain = true
+
+[[routes]]
+pattern = "content.jabulanifm.com"
+custom_domain = true
 
 [vars]
 AGENT_NAME = "JabulaniFM Content OS"

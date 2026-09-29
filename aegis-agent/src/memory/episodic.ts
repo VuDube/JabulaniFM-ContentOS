@@ -1,0 +1,3 @@
+import type { Env } from '../types';
+export async function recordEpisode(env: Env, entry: { session_id: string; show_slug?: string; role: 'user'|'agent'|'system'; content: string; importance_score?: number }) { const result = await env.DB.prepare('INSERT INTO episodic_memory(session_id,show_slug,role,content,importance_score) VALUES(?,?,?,?,?)').bind(entry.session_id, entry.show_slug ?? null, entry.role, entry.content, entry.importance_score ?? 0.5).run(); return { id: result.meta.last_row_id, ...entry }; }
+export async function listEpisodes(env: Env, sessionId: string) { return (await env.DB.prepare('SELECT * FROM episodic_memory WHERE session_id=? ORDER BY timestamp DESC LIMIT 100').bind(sessionId).all()).results; }

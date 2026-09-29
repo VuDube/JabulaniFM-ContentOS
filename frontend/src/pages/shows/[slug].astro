@@ -1,33 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-
-const names: Record<string, string> = {
-  'money-desk': 'The Money Desk',
-  'township-ceo': 'Township CEO',
-  'african-archives': 'African Archives',
-  'mind-decoded': 'Mind Decoded',
-};
-
-export function getStaticPaths() {
-  const slugs = ['money-desk', 'township-ceo', 'african-archives', 'mind-decoded'];
-  return slugs.map((slug) => ({ params: { slug } }));
-}
-
-const { slug } = Astro.params;
-const name = names[slug || ''] || 'JabulaniFM Show';
+import Layout from '../../layouts/Layout.astro'; import {shows} from '../../data/shows';
+export function getStaticPaths(){return shows.map(show=>({params:{slug:show.slug},props:{show}}));}
+const {show}=Astro.props;
 ---
-<Layout title={`${name} | JabulaniFM`}>
-  <main>
-    <a href="/">← Back to network</a>
-    <span class="eyebrow">JABULANIFM / SHOW</span>
-    <h1>{name}</h1>
-    <p>Original South African programming with context, clarity and a point of view.</p>
-    <a class="button" href="/">Return to the network</a>
-  </main>
-</Layout>
-<style>
-  main{max-width:900px;margin:auto;padding:12vh 6vw;color:#F9FAFB;font-family:Inter,system-ui}
-  a{color:#F59E0B}.eyebrow{display:block;margin-top:20vh;color:#F59E0B;font:12px monospace;letter-spacing:.16em}
-  h1{font-size:clamp(3rem,10vw,8rem);line-height:.9;letter-spacing:-.07em}p{color:#9CA3AF;font-size:1.2rem}
-  .button{display:inline-block;margin-top:30px;background:#F59E0B;color:#0A0B0E;padding:14px 20px;font-weight:bold}
-</style>
+<Layout title={`${show.name} — JabulaniFM`} description={show.tagline}><main class="detail-page"><span class="eyebrow">JABULANIFM / SHOW {String(shows.indexOf(show)+1).padStart(2,'0')}</span><h1>{show.name}</h1><p class="detail-lede">{show.tagline}</p><div class="detail-grid"><div><span class="eyebrow">THE SIGNAL</span><p>Every episode brings a grounded South African perspective to the decisions that matter.</p></div><div><span class="eyebrow">AUDIENCE</span><p>{show.audience}</p></div><div><span class="eyebrow">TONE</span><p>{show.tone}</p></div><div><span class="eyebrow">INSIDER TOOL</span><p>{show.offer} · {show.price}</p></div></div><a class="button" href="/watch/demo">Watch the latest signal →</a><a class="text-link" href="/#shows">← Back to the network</a></main></Layout>
