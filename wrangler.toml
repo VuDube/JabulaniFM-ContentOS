@@ -47,6 +47,3 @@ max_retries = 3
 
 [ai]
 binding = "AI"
-
-[triggers]
-crons = ["0 3 * * *", "0 6 * * *", "0 12 * * 1"]
